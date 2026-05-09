@@ -1,0 +1,425 @@
+WandB run: https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-retrieval/runs/93063inr
+/opt/conda/lib/python3.10/site-packages/huggingface_hub/file_download.py:949: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+/opt/conda/lib/python3.10/site-packages/huggingface_hub/file_download.py:949: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+Reddit ToT dataset loaded — 27887 queries
+
+TREC training queries : 150
+Total epochs          : 100
+Batch size per GPU    : 16
+Learning rate         : 2e-05
+Encoding documents: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:20<00:00, 14.22s/it]
+
+Epoch 1/100  TREC loss: 19.0935  Reddit loss: 4.2891
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.0000)
+Epoch 2/100  TREC loss: 2.2733  Reddit loss: 1.9057
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.0000)
+Epoch 3/100  TREC loss: 1.4289  Reddit loss: 1.3120
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.0000)
+Epoch 4/100  TREC loss: 1.1088  Reddit loss: 0.9860
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.0000)
+Epoch 5/100  TREC loss: 0.8411  Reddit loss: 0.7696
+  Evaluating on dev set...
+Evaluating queries: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.84s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1767
+  mean_r@100                0.3533
+=============================================
+
+  Checkpoint saved → checkpoints/best  (NDCG@1000: 0.1767)
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Encoding documents: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:25<00:00, 14.23s/it]
+Epoch 6/100  TREC loss: 0.5394  Reddit loss: 0.6167
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 7/100  TREC loss: 0.4211  Reddit loss: 0.5240
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 8/100  TREC loss: 0.5281  Reddit loss: 0.4498
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 9/100  TREC loss: 0.2332  Reddit loss: 0.3993
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 10/100  TREC loss: 0.4635  Reddit loss: 0.3688
+  Evaluating on dev set...
+Evaluating queries: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.81s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1453
+  mean_r@100                0.2933
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Encoding documents: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:18<00:00, 14.21s/it]
+Epoch 11/100  TREC loss: 0.2578  Reddit loss: 0.3478
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 12/100  TREC loss: 0.2509  Reddit loss: 0.3323
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 13/100  TREC loss: 0.2071  Reddit loss: 0.3007
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 14/100  TREC loss: 0.2220  Reddit loss: 0.2929
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 15/100  TREC loss: 0.1913  Reddit loss: 0.2865
+  Evaluating on dev set...
+Evaluating queries: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.84s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1660
+  mean_r@100                0.3667
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Encoding documents: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:09<00:00, 14.19s/it]
+Epoch 16/100  TREC loss: 0.2848  Reddit loss: 0.2739
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 17/100  TREC loss: 0.1849  Reddit loss: 0.2633
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 18/100  TREC loss: 0.1681  Reddit loss: 0.2528
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 19/100  TREC loss: 0.1774  Reddit loss: 0.2546
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 20/100  TREC loss: 0.1509  Reddit loss: 0.2442
+  Evaluating on dev set...
+Evaluating queries: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.82s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1755
+  mean_r@100                0.3933
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Encoding documents: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:20<00:00, 14.22s/it]
+Epoch 21/100  TREC loss: 0.1784  Reddit loss: 0.2370
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 22/100  TREC loss: 0.1384  Reddit loss: 0.2289
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 23/100  TREC loss: 0.1041  Reddit loss: 0.2289
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 24/100  TREC loss: 0.0538  Reddit loss: 0.2259
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1767)
+Epoch 25/100  TREC loss: 0.1436  Reddit loss: 0.2164
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.81s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1792
+  mean_r@100                0.3467
+=============================================
+
+  Checkpoint saved → checkpoints/best  (NDCG@1000: 0.1792)
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:31<00:00, 14.24s/it]
+Epoch 26/100  TREC loss: 0.3416  Reddit loss: 0.2193
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 27/100  TREC loss: 0.1659  Reddit loss: 0.2071
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 28/100  TREC loss: 0.2246  Reddit loss: 0.2022
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 29/100  TREC loss: 0.1480  Reddit loss: 0.1994
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 30/100  TREC loss: 0.1382  Reddit loss: 0.1924
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.81s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1311
+  mean_r@100                0.2733
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:06<00:00, 14.19s/it]
+Epoch 31/100  TREC loss: 0.1363  Reddit loss: 0.1922
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 32/100  TREC loss: 0.1001  Reddit loss: 0.1975
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 33/100  TREC loss: 0.0642  Reddit loss: 0.1888
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 34/100  TREC loss: 0.1013  Reddit loss: 0.1798
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 35/100  TREC loss: 0.2183  Reddit loss: 0.1835
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.82s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1504
+  mean_r@100                0.3200
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:10<00:00, 14.19s/it]
+Epoch 36/100  TREC loss: 0.0468  Reddit loss: 0.1749
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 37/100  TREC loss: 0.1264  Reddit loss: 0.1766
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 38/100  TREC loss: 0.1084  Reddit loss: 0.1718
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 39/100  TREC loss: 0.0661  Reddit loss: 0.1661
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.1792)
+Epoch 40/100  TREC loss: 0.0340  Reddit loss: 0.1720
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.81s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.2079
+  mean_r@100                0.4067
+=============================================
+
+  Checkpoint saved → checkpoints/best  (NDCG@1000: 0.2079)
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:08<00:00, 14.19s/it]
+Epoch 41/100  TREC loss: 0.0711  Reddit loss: 0.1753
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 42/100  TREC loss: 0.0368  Reddit loss: 0.1666
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 43/100  TREC loss: 0.0943  Reddit loss: 0.1640
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 44/100  TREC loss: 0.1027  Reddit loss: 0.1637
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 45/100  TREC loss: 0.0555  Reddit loss: 0.1662
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.83s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1939
+  mean_r@100                0.3867
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:00<00:00, 14.17s/it]
+Epoch 46/100  TREC loss: 0.0446  Reddit loss: 0.1608
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 47/100  TREC loss: 0.0684  Reddit loss: 0.1518
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 48/100  TREC loss: 0.0743  Reddit loss: 0.1523
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 49/100  TREC loss: 0.0661  Reddit loss: 0.1547
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 50/100  TREC loss: 0.1083  Reddit loss: 0.1462
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.83s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1824
+  mean_r@100                0.3800
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:00<00:00, 14.17s/it]
+Epoch 51/100  TREC loss: 0.0602  Reddit loss: 0.1510
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 52/100  TREC loss: 0.0680  Reddit loss: 0.1467
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 53/100  TREC loss: 0.0393  Reddit loss: 0.1439
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 54/100  TREC loss: 0.1785  Reddit loss: 0.1439
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 55/100  TREC loss: 0.0292  Reddit loss: 0.1511
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.83s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1941
+  mean_r@100                0.3800
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:10<00:00, 14.20s/it]
+Epoch 56/100  TREC loss: 0.0620  Reddit loss: 0.1461
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 57/100  TREC loss: 0.0222  Reddit loss: 0.1410
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 58/100  TREC loss: 0.2164  Reddit loss: 0.1443
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 59/100  TREC loss: 0.0346  Reddit loss: 0.1423
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 60/100  TREC loss: 0.0052  Reddit loss: 0.1404
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.83s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1820
+  mean_r@100                0.3600
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:08<00:00, 14.19s/it]
+Epoch 61/100  TREC loss: 0.0456  Reddit loss: 0.1415
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 62/100  TREC loss: 0.0607  Reddit loss: 0.1395
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 63/100  TREC loss: 0.0872  Reddit loss: 0.1400
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 64/100  TREC loss: 0.1017  Reddit loss: 0.1349
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 65/100  TREC loss: 0.0317  Reddit loss: 0.1250
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.82s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1978
+  mean_r@100                0.4067
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:27<00:00, 14.23s/it]
+Epoch 66/100  TREC loss: 0.0762  Reddit loss: 0.1370
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 67/100  TREC loss: 0.0361  Reddit loss: 0.1331
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 68/100  TREC loss: 0.0580  Reddit loss: 0.1251
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 69/100  TREC loss: 0.0773  Reddit loss: 0.1348
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 70/100  TREC loss: 0.0215  Reddit loss: 0.1290
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.82s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1758
+  mean_r@100                0.3467
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:40<00:00, 14.26s/it]
+Epoch 71/100  TREC loss: 0.0440  Reddit loss: 0.1251
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 72/100  TREC loss: 0.0786  Reddit loss: 0.1361
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 73/100  TREC loss: 0.0294  Reddit loss: 0.1202
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 74/100  TREC loss: 0.0167  Reddit loss: 0.1274
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 75/100  TREC loss: 0.0404  Reddit loss: 0.1361
+  Evaluating on dev set...
+Evaluating queries: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.82s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1463
+  mean_r@100                0.3133
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:41<00:00, 14.26s/it]  
+Epoch 76/100  TREC loss: 0.0303  Reddit loss: 0.1226
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 77/100  TREC loss: 0.0623  Reddit loss: 0.1309
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 78/100  TREC loss: 0.0463  Reddit loss: 0.1184
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 79/100  TREC loss: 0.0645  Reddit loss: 0.1240
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 80/100  TREC loss: 0.0348  Reddit loss: 0.1197
+  Evaluating on dev set...
+Evaluating queries: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.83s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1336
+  mean_r@100                0.2933
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:41<00:00, 14.26s/it]
+Epoch 81/100  TREC loss: 0.0221  Reddit loss: 0.1253
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 82/100  TREC loss: 0.0578  Reddit loss: 0.1207
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 83/100  TREC loss: 0.0180  Reddit loss: 0.1239
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 84/100  TREC loss: 0.0558  Reddit loss: 0.1214
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 85/100  TREC loss: 0.0404  Reddit loss: 0.1240
+  Evaluating on dev set...
+Evaluating queries: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.82s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.2028
+  mean_r@100                0.4200
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:30<00:00, 14.24s/it]
+Epoch 86/100  TREC loss: 0.0530  Reddit loss: 0.1149
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 87/100  TREC loss: 0.0741  Reddit loss: 0.1145
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 88/100  TREC loss: 0.0046  Reddit loss: 0.1099
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 89/100  TREC loss: 0.0063  Reddit loss: 0.1138
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 90/100  TREC loss: 0.0150  Reddit loss: 0.1167
+  Evaluating on dev set...
+Evaluating queries: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.82s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1823
+  mean_r@100                0.4200
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 453/453 [1:47:43<00:00, 14.27s/it]
+Epoch 91/100  TREC loss: 0.0201  Reddit loss: 0.1159
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 92/100  TREC loss: 0.1071  Reddit loss: 0.1144
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 93/100  TREC loss: 0.0528  Reddit loss: 0.1161
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 94/100  TREC loss: 0.0359  Reddit loss: 0.1177
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 95/100  TREC loss: 0.0367  Reddit loss: 0.1141
+  Evaluating on dev set...
+Evaluating queries: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 10/10 [00:28<00:00,  2.83s/it]
+
+=============================================
+Evaluation Results
+=============================================
+  mean_ndcg@1000            0.1659
+  mean_r@100                0.4133
+=============================================
+
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Encoding documents:  47%|█████████████████████████████████████████████████████████████████████████████████████████████████▊                                                                                                              | 213/453 [50:48<56:47, 14.20s/it]
+Epoch 96/100  TREC loss: 0.0985  Reddit loss: 0.1115
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 97/100  TREC loss: 0.0107  Reddit loss: 0.1081
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 98/100  TREC loss: 0.0421  Reddit loss: 0.1100
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 99/100  TREC loss: 0.0210  Reddit loss: 0.1187
+  Checkpoint saved → checkpoints/latest  (NDCG@1000: 0.2079)
+Epoch 100/100  TREC loss: 0.0946  Reddit loss: 0.1068
+  Evaluating on dev set...
