@@ -1,0 +1,115 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+
+%labels
+    Author      tg22
+    Project     ToT-Retrieval (BERT-GRU bi-encoder)
+    Description Singularity container for TREC 2023 Tip-of-the-Tongue retrieval
+
+%help
+    Singularity container for training and evaluating the BERT-GRU bi-encoder
+    on the TREC 2023 Tip-of-the-Tongue (ToT) retrieval task.
+
+    Basic training run (all defaults):
+        singularity run --nv tot_retrieval.sif
+
+    Custom training run:
+        singularity run --nv tot_retrieval.sif \
+            --epochs 20 \
+            --batch-size 32 \
+            --lr 1e-5 \
+            --checkpoint-dir /data/checkpoints
+
+    Resume from checkpoint:
+        singularity run --nv tot_retrieval.sif \
+            --resume /data/checkpoints/best
+
+    With Reddit multi-domain data:
+        singularity run --nv tot_retrieval.sif \
+            --reddit-queries /data/reddit/queries.jsonl \
+            --reddit-domain movie
+
+    Run any other script in the container:
+        singularity exec --nv tot_retrieval.sif python evaluate.py
+
+%environment
+    export LC_ALL=C
+    export PYTHONUNBUFFERED=1
+    # HuggingFace cache — override at runtime with --bind or HF_HOME env var
+    export HF_HOME=/opt/hf_cache
+    export TRANSFORMERS_CACHE=/opt/hf_cache
+    export TOKENIZERS_PARALLELISM=false
+
+%post
+    # ------------------------------------------------------------------ #
+    # System packages
+    # ------------------------------------------------------------------ #
+    apt-get update -qq && apt-get install -y --no-install-recommends \
+        git \
+        wget \
+        curl \
+        ca-certificates \
+        libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+    # ------------------------------------------------------------------ #
+    # Python packages
+    # ------------------------------------------------------------------ #
+    pip install --no-cache-dir --upgrade pip
+
+    # Core ML / NLP
+    pip install --no-cache-dir \
+        transformers==4.40.2 \
+        tokenizers==0.19.1
+
+    # FAISS GPU build (matches CUDA 12.x)
+    pip install --no-cache-dir faiss-gpu
+
+    # Utilities
+    pip install --no-cache-dir \
+        numpy \
+        tqdm \
+        ir_datasets \
+        datasets \
+        requests
+
+    # ------------------------------------------------------------------ #
+    # Pre-download bert-base-uncased so the container works offline
+    # ------------------------------------------------------------------ #
+    mkdir -p /opt/hf_cache
+    python -c "
+from transformers import BertModel, BertTokenizer
+BertTokenizer.from_pretrained('bert-base-uncased')
+BertModel.from_pretrained('bert-base-uncased')
+print('bert-base-uncased cached successfully.')
+"
+
+    # ------------------------------------------------------------------ #
+    # Copy project source into the image
+    # ------------------------------------------------------------------ #
+    mkdir -p /opt/tot_retrieval
+    cp -r /tot_src/* /opt/tot_retrieval/ 2>/dev/null || true
+
+%files
+    # Copy source files from the build host into a staging area.
+    # All .py files from the project root are placed under /tot_src
+    # during the build; %post then moves them to /opt/tot_retrieval.
+    train.py          /tot_src/train.py
+    tot_retrieval.py  /tot_src/tot_retrieval.py
+    dataset.py        /tot_src/dataset.py
+    evaluate.py       /tot_src/evaluate.py
+    reranker.py       /tot_src/reranker.py
+    rq2_eval.py       /tot_src/rq2_eval.py
+    tokenizer_eval.py /tot_src/tokenizer_eval.py
+    __init__.py       /tot_src/__init__.py
+
+%runscript
+    #!/bin/bash
+    # Default entry point: run train.py, forwarding all CLI arguments.
+    # Data and checkpoint directories must be bind-mounted at runtime, e.g.:
+    #   singularity run --nv \
+    #       --bind /scratch/my_data:/opt/tot_retrieval/data \
+    #       --bind /scratch/checkpoints:/opt/tot_retrieval/checkpoints \
+    #       tot_retrieval.sif [train.py args...]
+    cd /opt/tot_retrieval
+    exec python3

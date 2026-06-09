@@ -1,0 +1,10 @@
+#!/bin/bash
+
+export DISPLAY=:20
+
+mkdir -p /home/tg22/.cache/hf_cache
+
+singularity exec --nv \
+    --bind /home/tg22/.cache/hf_cache:/opt/hf_cache \
+    --bind /datasets \
+    /home/tg22/containers/584.sif python3 "$@"
