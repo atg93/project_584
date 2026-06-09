@@ -1,3 +1,5 @@
+import json
+import os
 import numpy as np
 import torch
 import faiss
@@ -128,6 +130,43 @@ def evaluate(query_encoder, doc_encoder, query_dataloader, doc_dataloader,
 # ---------------------------------------------------------------------------
 # TREC run file export — for official TREC evaluation with trec_eval
 # ---------------------------------------------------------------------------
+
+def save_candidates(query_encoder, doc_encoder, query_dataloader, doc_dataloader,
+                    device, output_path, k=1000, index=None, idx_to_docid=None,
+                    append=False):
+    """
+    Saves top-K retrieved doc IDs per query in jsonl format:
+        {"query_id": "...", "retrieved": ["doc1", "doc2", ...]}
+    Required input for RerankerDataset in reranker.py.
+
+    Pass a pre-built (index, idx_to_docid) to avoid re-encoding documents when
+    calling for multiple query sets (e.g. TREC + Reddit) against the same corpus.
+    Set append=True for the second and subsequent calls to the same output_path.
+    """
+    if index is None or idx_to_docid is None:
+        index, idx_to_docid = build_index(doc_encoder, doc_dataloader, device)
+
+    query_encoder.eval()
+    os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
+    mode = 'a' if append else 'w'
+
+    with open(output_path, mode) as f, torch.no_grad():
+        for batch in tqdm(query_dataloader, desc='Generating candidates'):
+            q_vecs = query_encoder(
+                batch['sentence_ids'].to(device),
+                batch['sentence_masks'].to(device)
+            ).cpu().numpy().astype('float32')
+
+            faiss.normalize_L2(q_vecs)
+            _, doc_indices = index.search(q_vecs, k)
+
+            for i, qid in enumerate(batch['query_id']):
+                retrieved = [idx_to_docid[j] for j in doc_indices[i]]
+                f.write(json.dumps({'query_id': qid, 'retrieved': retrieved}) + '\n')
+
+    print(f'Candidates {"appended to" if append else "saved to"} {output_path}')
+    return index, idx_to_docid
+
 
 def save_trec_run(query_encoder, doc_encoder, query_dataloader, doc_dataloader,
                   device, output_path, run_name='bert_gru_attn', k=1000):
