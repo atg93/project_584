@@ -64,16 +64,13 @@ All scripts set torch.manual_seed(42), np.random.seed(42), and FAISS
 deterministic settings for reproducibility.
 
 ## Experiment Tracking (W&B)
- RQ1 tokenizer/dimension sweep
-        https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-tokenizer-sweep
-  RQ2 sentence-dropout sweep
-        https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-rq2-dropout-sweep
-  LoRA Qwen2.5 reranker training
-        https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-reranker
-  BM25 baseline grid search
-        https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-bm25-sweep
-  Dense BERT--GRU retrieval runs
-        https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-retrieval
+|---|---|
+| RQ1 tokenizer/dimension sweep | [tot-tokenizer-sweep](https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-tokenizer-sweep) |
+| RQ2 sentence-dropout sweep | [tot-rq2-dropout-sweep](https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-rq2-dropout-sweep) |
+| LoRA Qwen2.5 reranker training | [tot-reranker](https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-reranker) |
+| BM25 baseline grid search | [tot-bm25-sweep](https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-bm25-sweep) |
+| Dense BERT-GRU retrieval runs | [tot-retrieval](https://wandb.ai/tugrul-gorgulu-metu-middle-east-technical-university/tot-retrieval) |
+
 
 ## Reports
 See reports/ for final PDF
