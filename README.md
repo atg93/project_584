@@ -5,7 +5,7 @@
 - **scores/** — JSON files with retrieval metric results (BM25, dense, and reranker pipelines) plus failure case logs from error analysis runs.
 - **figures/** — generated visualizations: model architecture diagrams, UMAP plots of query/document embeddings, and reranking delta maps (PNG and PDF).
 - **error_analysis/** — error analysis outputs including per-query failure breakdowns and summary statistics.
-- **reports/** — proposal, interim, and final report PDFs/LaTeX source, plus report-specific figures.
+- **reports/** —  final report PDF/LaTeX source, plus report-specific figures.
 
 ## Setup
 1. Clone the repo
