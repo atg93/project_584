@@ -35,27 +35,29 @@ Reddit downloader needs data/trec/docs.jsonl to resolve answer IDs.
 
 After downloading, the expected layout is:
 
+```
 data/
-├── trec/
-│   ├── train_queries.jsonl   # {id, text, sentences: [...]}
-│   ├── dev_queries.jsonl
-│   ├── docs.jsonl            # {id, title, text}  — 231K Wikipedia docs
-│   ├── train_qrels.txt       # TREC format: qid 0 docid rel
-│   └── dev_qrels.txt
-└── reddit/
-    └── queries.jsonl         # {id, text, sentences, answer_id, domain}
+  trec/
+    train_queries.jsonl    # {id, text, sentences: [...]}
+    dev_queries.jsonl      # {id, text, sentences: [...]}
+    docs.jsonl             # {id, title, text}  — 231K Wikipedia docs
+    train_qrels.txt        # TREC format: qid 0 docid rel
+    dev_qrels.txt          # TREC format: qid 0 docid rel
+  reddit/
+    queries.jsonl          # {id, text, sentences, answer_id, domain}
+```
 
 Verify everything is in place.
 
 
 
 ## Reproducing Results
-- BM25 baseline:        python src/bm25.py
-- RQ1 tokenizer sweep:  python src/tokenizer_sweep.py
-- RQ2 dropout sweep:    python src/dropout_sweep.py
-- Reranker training:    python src/train_reranker.py
-- Significance tests:   python src/significance_test.py
-- Error analysis:       python src/error_analysis.py
+- BM25 baseline:        `python src/bm25_baseline.py`
+- RQ1 tokenizer sweep:  `python src/tokenizer_eval.py`
+- RQ2 dropout sweep:    `python src/rq2_dropout_sweep.py`
+- Reranker training:    `python src/train.py`
+- Significance tests:   `python src/significance_test.py`
+- Error analysis:       `python src/error_analysis.py`
 
 ## Random Seeds
 All scripts set torch.manual_seed(42), np.random.seed(42), and FAISS
