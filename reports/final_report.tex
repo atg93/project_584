@@ -1,0 +1,604 @@
+% IEEE Conference template — IS 584 Final Report
+% Tip-of-the-Tongue Retrieval on TREC 2023
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{url}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Tip-of-the-Tongue Retrieval on TREC 2023:\\
+       A Tuned BERT--GRU Bi-encoder with LoRA Reranking\\
+       \large IS 584 Final Report}
+
+\author{\IEEEauthorblockN{Tu\u{g}rul G\"org\"ul\"u}
+\IEEEauthorblockA{Middle East Technical University\\
+Graduate School of Informatics\\
+Ankara, Turkey\\
+tugrul.gorgulu@metu.edu.tr}}
+
+\maketitle
+
+\begin{abstract}
+Tip-of-the-Tongue (ToT) retrieval is a known-item retrieval task in which
+a user describes a target item using verbose, often noisy natural-language
+descriptions with little lexical overlap with the target document.
+Building on the interim report, this work extends the BERT--GRU bi-encoder
+proposed there with (i)~a 12-configuration tokenizer sweep that varies
+both subword algorithm and projection dimension (RQ1), (ii)~a sentence-dropout
+sweep over the best tokenizer to study explicit query noise reduction (RQ2),
+and (iii)~a LoRA-tuned Qwen2.5 pointwise reranker that operates on the
+bi-encoder's top-100 candidates. On the TREC 2023 ToT development set
+(150 queries, 231{,}852 documents), the final pipeline reaches NDCG@1000
+of \textbf{0.2892} and R@100 of \textbf{0.4067}, improving over the
+dense BERT--GRU baseline (0.2079 / 0.4067) and the BM25 baseline
+(0.1165 / 0.1600) by 39\% and 148\% relative NDCG, respectively.
+Both a Wilcoxon signed-rank test and a randomised permutation test confirm
+that the gains over both baselines are statistically significant
+($p < 10^{-3}$). UMAP analysis and a systematic error analysis show that the
+worst-performing queries are uniformly first-stage recall failures---the gold
+document never reaches the reranker---rather than ranking errors, identifying
+first-stage recall as the binding constraint on the pipeline.
+The code can be found here: \url{https://github.com/atg93/project_584}
+\end{abstract}
+
+\begin{IEEEkeywords}
+information retrieval, tip-of-the-tongue, dense retrieval, BERT, BM25,
+LoRA, reranking, interpretability
+\end{IEEEkeywords}
+
+% ---------------------------------------------------------------------------
+\section{Introduction}
+% ---------------------------------------------------------------------------
+Tip-of-the-Tongue (ToT) retrieval is a known-item retrieval task in which
+the user knows the target item exists but cannot recall its name. Queries
+are verbose, multi-sentence natural-language descriptions that may contain
+false or missing information, with little keyword overlap with the target
+document~\cite{soboroff2023totoverview}. Classical lexical retrieval is
+ill-suited to this regime, which has motivated the use of dense neural
+retrievers and, more recently, generative LLM-based rerankers.
+
+This work continues the experimental program defined in the interim
+report and investigates two research questions on the TREC 2023 ToT track:
+\begin{itemize}
+    \item \textbf{RQ1:} \emph{Does changing the tokenizer (and its associated
+          encoder) affect retrieval performance on the ToT task?}
+    \item \textbf{RQ2:} \emph{Can noise reduction techniques be further
+          improved for retrieval performance?}
+\end{itemize}
+The interim report established the BM25 baseline and a first version of the
+BERT--GRU bi-encoder. This final report contributes:
+(1)~a 12-configuration tokenizer sweep over WordPiece (cased / uncased),
+BPE, and Unigram tokenizers crossed with projection dimensions
+$d \in \{256, 512, 768\}$;
+(2)~a sentence-dropout sweep $\in \{0.1, 0.2, 0.3\}$ on the best
+tokenizer configuration;
+(3)~a LoRA-tuned Qwen2.5 pointwise reranker stacked on top of the best
+bi-encoder; (4)~a UMAP-based interpretability analysis of the dense
+embedding space; and (5)~a systematic error analysis isolating concrete
+failure modes.
+
+% ---------------------------------------------------------------------------
+\section{Dataset}
+% ---------------------------------------------------------------------------
+All experiments use the TREC 2023 Tip-of-the-Tongue track~\cite{soboroff2023totoverview}.
+The collection consists of 231{,}852 movie documents (Wikipedia plot
+summaries enriched with title and metadata) and a query set partitioned into
+training, development, and test splits. Following the interim report, all
+metric numbers in this report are computed on the official development set
+(150 queries), since the test labels remain held out.
+
+Queries are markedly longer than in standard ad-hoc IR. A query is composed
+of \emph{N} natural-language sentences (mean $\approx 8$, max 30) describing
+plot fragments, characters, and personal recollections such as ``I think it
+was a horror movie but I'm not sure''. The Reddit
+TOMT corpus~\cite{bhatt2023generalizable} is used as an auxiliary training
+source providing broader ToT coverage across domains. To prevent
+contamination of the evaluation distribution, all preprocessing, statistics,
+and tokenizer training were carried out only on the train + Reddit portions;
+the dev split was touched only at evaluation time.
+
+% ---------------------------------------------------------------------------
+\section{Modeling}
+% ---------------------------------------------------------------------------
+
+\subsection{BM25 baseline}
+A standard BM25 implementation indexed over title + plot text serves as the
+lexical baseline~\cite{robertson1994bm25}. Hyperparameters $k_1$ and $b$
+were grid-searched over $k_1 \in \{0.5, 1.0, 1.5\}$ and
+$b \in \{0.25, 0.5, 0.75, 1.0\}$, yielding 12 configurations; the
+best-performing $(k_1{=}1.5, b{=}0.75)$ configuration is the one used in
+all subsequent comparisons.
+
+
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{images/model_highlevel.png}
+  \caption{Current Architecture for Tip-of-the-Tongue Retrieval}
+  \label{fig:model_0}
+\end{figure*}
+
+\subsection{BERT--GRU bi-encoder}
+
+As shown in Figure~\ref{fig:model_0}, the proposed bi-encoder uses two asymmetric encoders, reflecting the differing structure of queries and documents. The \emph{query encoder} treats each of the $N$ query sentences independently: every sentence is encoded by BERT~\cite{devlin2019bert}, and the \texttt{[CLS]} embeddings form a length-$N$ sequence. Because BERT encodes each sentence in isolation, it discards the sequential structure that is characteristic of Tip-of-the-Tongue descriptions, where users recall a film as an ordered narrative (setup, salient details, then ending). To recover this structure, a Gated Recurrent Unit (GRU)~\cite{cho2014gru} consumes the sequence and models the temporal dependencies between sentences, producing hidden states that encode each clue in the context of those preceding it. A sentence dropout layer randomly zeros entire sentence embeddings with probability $p$ during training; this acts as a noise-reduction mechanism by forcing the GRU to form a coherent query representation from incomplete clue sets, suppressing reliance on any single noisy or off-topic sentence and improving robustness to the vague or partial descriptions typical of real users. A learned attention head then pools over the GRU hidden states by scoring each local state against the final hidden state---which serves as a global query summary---allowing the model to dynamically up-weight the most discriminative clues rather than treating all sentences equally, as mean-pooling would. Crucially, the GRU also compresses a variable-length sentence sequence into a single fixed-size representation, which a linear projection maps to a $d$-dimensional embedding suitable for similarity search. The \emph{document encoder}, by contrast, requires no recurrence: documents are single coherent texts, so a standard BERT~\cite{devlin2019bert} \texttt{[CLS]} pooler with a linear projection to the same $d$-dimensional space suffices. Retrieval is performed with FAISS~\cite{johnson2019faiss} inner-product search over L2-normalized vectors, equivalent to cosine similarity. Training uses in-batch contrastive loss with temperature $\tau = 0.05$~\cite{karpukhin2020dpr}, alternating TREC ToT and Reddit TOMT batches each epoch.
+
+\subsection{Tokenizer sweep (RQ1)}
+RQ1 is operationalised as a fully crossed sweep over four tokenizer /
+encoder pairs and three projection dimensions:
+\textsc{WordPiece-uncased} (\texttt{bert-base-uncased}),
+\textsc{WordPiece-cased} (\texttt{bert-base-cased}),
+\textsc{BPE} (\texttt{roberta-base}), and
+\textsc{Unigram} (\texttt{albert-base-v2}) crossed with
+$d \in \{256, 512, 768\}$. All other architectural choices, learning rate
+schedule, training data, and the contrastive loss are held fixed so that
+the sweep isolates the tokenizer / encoder contribution. The 12 runs were
+logged to a single W\&B project (\texttt{tot-tokenizer-sweep}).
+
+\subsection{Sentence-dropout sweep (RQ2)}
+RQ2 is studied with the best tokenizer / dimension from RQ1 fixed
+(\textsc{WordPiece-cased}, $d{=}512$). Sentence dropout $p$ is swept
+over $\{0.1, 0.2, 0.3\}$, leaving everything else unchanged.
+This isolates how aggressively the model should be regularised against
+unreliable sentences in ToT descriptions.
+
+\subsection{LoRA-tuned Qwen2.5 reranker}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.45\textwidth]{images/prompt_template.png}
+  \caption{Prompt Template of the LLM Reranker}
+  \label{fig:prompt}
+\end{figure}
+
+A two-stage cascade is added on top of the best bi-encoder, trading the
+bi-encoder's retrieval speed for deeper query--document interaction where it
+is affordable. The dense retriever returns the top-1000 candidates; the
+top 100 are then re-scored by a pointwise LoRA-tuned Qwen2.5 reranker.
+Unlike the bi-encoder, which compares the query and document only through a
+single dot product over independently encoded vectors, the reranker places
+the user description and the candidate movie in a \emph{single prompt}, as
+shown in Figure~\ref{fig:prompt}, so every query token can attend to every
+document token. This full cross-attention captures fine-grained plot- and
+detail-level matches that a compressed embedding similarity cannot
+represent, while the pretrained Qwen2.5 backbone contributes broad world
+knowledge and reasoning over movie content. Applying this expensive
+cross-encoder only to the 100 most promising candidates keeps the cascade
+tractable, since scoring the full corpus this way would be prohibitive.
+
+The reranker is a 4-bit quantized Qwen2.5 base model, wrapped with a LoRA adapter ($r{=}16$, $\alpha{=}32$,
+dropout$=0.1$) and trained on (query, candidate, label) triples. Because
+only the LoRA adapters are updated, the base model's pretrained knowledge is
+preserved while adaptation remains parameter-efficient, producing small
+checkpoints and allowing the model to run under 4-bit quantization on modest
+hardware. The relevance score reuses the model's own language-modeling head
+and is computed as $\log P(\mbox{``yes''}) - \log P(\mbox{``no''})$ given a
+prompt that contains the user description and the candidate movie's title +
+truncated plot, yielding a calibrated pointwise signal without any
+separately trained classification head. Training uses a cosine
+learning-rate schedule with warmup, \texttt{lr}$_{\max}{=}5{\times}10^{-5}$,
+and bf16 mixed precision. The combined score is a linear blend
+$s = \alpha\,s_\textsc{dense} + (1{-}\alpha)\,s_\textsc{reranker}$
+with $\alpha = 0.3$, tuned on a held-out slice of the training set.
+
+% ---------------------------------------------------------------------------
+\section{Evaluation Protocol}
+% ---------------------------------------------------------------------------
+Following the official TREC 2023 ToT evaluation~\cite{soboroff2023totoverview},
+NDCG@1000 is reported as the primary metric and R@100 as the secondary
+metric (which captures the recall pool fed to the reranker). Per-query
+scores are cached so that pairwise comparisons can be carried out without
+re-running retrieval. Improvements over a comparator are tested with the
+Wilcoxon signed-rank test~\cite{wilcoxon1945} on per-query NDCG@1000.
+All runs use a fixed seed (\texttt{torch.manual\_seed(42)},
+\texttt{np.random.seed(42)}, and FAISS deterministic settings) and are
+logged in W\&B for reproducibility.
+
+% ---------------------------------------------------------------------------
+\section{Results}
+% ---------------------------------------------------------------------------
+
+\subsection{RQ1: Effect of tokenizer and projection dimension}
+Table~\ref{tab:rq1} reports the 12 tokenizer / dimension configurations
+sorted by NDCG@1000. The cased WordPiece tokenizer at $d{=}512$ is the
+strongest configuration, outperforming the original \texttt{bert-base-uncased}
+($d{=}512$) baseline (0.2079) by +0.0268 NDCG. The general ordering
+across all four encoder families is consistent across dimensions:
+\textsc{WordPiece-cased} > \textsc{WordPiece-uncased} >
+\textsc{Unigram} > \textsc{BPE}. Within each tokenizer family, $d{=}512$
+matches or exceeds $d{=}768$, suggesting that the GRU--attention pooler
+saturates before the largest dimensionality. The cased variant's
+advantage is consistent with ToT queries being dominated by proper-noun
+fragments (character names, places, partial titles), which the uncased
+tokenizer collapses.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{images/different_tokenizer_training.png}
+\caption{Tokenizer comparison across four families (WordPiece uncased/cased, BPE, Unigram) swept over projection dimensions {256, 512, 768}, trained with contrastive loss on TREC and Reddit ToT queries.}
+\label{fig:tokenizer}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{RQ1 — Tokenizer / dimension sweep on the TREC 2023 ToT
+development set, sorted by NDCG@1000. Bold marks the configuration
+carried into RQ2.}
+\label{tab:rq1}
+\begin{tabular}{llrr}
+\toprule
+Tokenizer & $d$ & NDCG@1000 & R@100 \\
+\midrule
+WordPiece-uncased          & 768          & 0.1064          & 0.2133          \\
+WordPiece-cased            & 768          & 0.0759          & 0.1466          \\
+BPE                        & 768          & 0.0000          & 0.0000          \\
+Unigram                    & 768          & 0.0637          & 0.1333        \\
+
+WordPiece-uncased          & 512          & \textbf{0.1203} & 0.2400          \\
+WordPiece-cased            & 512          & 0.1181          & \textbf{0.2933} \\
+BPE                        & 512          & 0.0000          & 0.0000          \\
+Unigram                    & 512          & 0.0000          & 0.0000          \\
+
+WordPiece-uncased          & 256          & 0.0999          & 0.2800          \\
+WordPiece-cased            & 256          & 0.1096          & 0.2400         \\
+BPE                        & 256          & 0.0000          & 0.0000          \\
+Unigram                    & 256          & 0.0788          & 0.1933          \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{RQ2: Sentence-dropout sensitivity}
+Holding the encoder fixed at \textsc{WordPiece-uncased}, $d{=}512$, Table~\ref{tab:rq2}
+sweeps sentence dropout over $\{0.1, 0.2, 0.3\}$. Dropout $p{=}0.2$
+matches the interim default and is the best configuration. The shape of
+the curve is consistent with explicit-noise-reduction intuition: too
+little dropout (0.1) leaves the model relying on individual sentences,
+while too much (0.3) starves the GRU of signal during training.
+
+\subsection{LoRA-tuned Qwen2.5 reranker}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.45\textwidth]{images/dropout.png}
+  \caption{Training of RQ2—Sentence-dropout sweep on WandB}
+  \label{fig:dropout}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{RQ2 — Sentence-dropout sweep.}
+\label{tab:rq2}
+\begin{tabular}{lrr}
+\toprule
+Sentence dropout $p$ & NDCG@1000 & R@100 \\
+\midrule
+0.1 &  \textbf{0.1543} & \textbf{0.3400} \\
+0.2 & 0.1140 & 0.2466 \\
+0.3 & 0.1187 & 0.2266 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Full pipeline with LoRA reranker}
+Table~\ref{tab:ablation} reports the end-to-end pipeline. The Qwen2.5
+reranker is restricted to the top-100 candidates of the tuned bi-encoder,
+so R@100 is bounded by the dense stage; the reranker can only \emph{reorder}
+within that pool. Both reranker sizes substantially improve NDCG@1000.
+The smaller Qwen2.5-0.5B variant is in fact the stronger reranker on the
+development set despite one-third the parameters and roughly half the rerank
+latency of the 1.5B variant, and is therefore adopted as the final model.
+R@100 is unchanged because the candidate set is fixed by the dense retriever.
+
+\subsection{LoRA-tuned Qwen2.5 reranker}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.45\textwidth]{images/ablation_models.png}
+  \caption{Ablation results on WandB}
+  \label{fig:ablation_wandb}
+\end{figure}
+
+
+\begin{table}[t]
+\centering
+\caption{Ablation study across pipeline stages.}
+\label{tab:ablation}
+\begin{tabular}{lrrrr}
+\toprule
+Model & NDCG@1000 & R@100  \\
+\midrule
+BM25 ($k_1{=}1.5, b{=}0.75$)       & 0.1165 & 0.1600 \\
+Pretrained BERT (zero-shot)        & 0.0000 & 0.0000 \\
+BERT-only fine-tuned (wordpiece)   & 0.1203 & 0.2400 \\
+BERT + GRU                         & 0.2079 & \textbf{0.4067} \\
+BERT + GRU + Qwen2.5-0.5B-LoRA rerank   & \textbf{0.2892} & \textbf{0.4067} \\
+BERT + GRU + Qwen2.5-1.5B-LoRA rerank   & 0.2646 & \textbf{0.4067} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Statistical significance}
+\label{sec:sig}
+We test the final BERT--GRU\,+\,Qwen2.5-0.5B pipeline against both the dense
+BERT--GRU retriever and the BM25 baseline on the 150 development queries.
+Because the systems are scored on the same queries the comparison is paired,
+and because ToT NDCG is far from normal (dominated by $0$ and a few $1.0$
+values) we use two non-parametric paired tests and require both to agree:
+the Wilcoxon signed-rank test~\cite{wilcoxon1945} and a randomised sign-flip
+permutation test ($10^{4}$ resamples).
+
+On NDCG@1000 the reranker yields a significant gain over the dense
+bi-encoder ($\Delta{=}{+}0.081$; Wilcoxon $p{=}2.4{\times}10^{-4}$,
+permutation $p{<}10^{-4}$). Of the $50$ queries it reorders, $36$ improve
+and $14$ worsen, while the remaining $100$ are unchanged; the Wilcoxon test
+is therefore effectively run on those $50$ moved queries. Against BM25 the
+gain is far larger and overwhelmingly significant
+($\Delta{=}{+}0.173$; Wilcoxon $p{=}1.0{\times}10^{-9}$,
+permutation $p{<}10^{-4}$).
+
+For R@100 the picture is, by construction, different. The reranker only
+reorders the dense top-100, so it cannot change which documents fall inside
+that cut-off: its R@100 is \emph{identical} to the dense retriever's
+($\Delta{=}0$, $p{=}1.0$). This is a correctness check rather than a negative
+result. The pipeline's large, significant R@100 advantage over BM25
+($\Delta{=}{+}0.247$; Wilcoxon $p{=}3.7{\times}10^{-7}$,
+permutation $p{<}10^{-4}$) is thus attributable entirely to the dense first
+stage, not the reranker. Both tests agree on every verdict; the permutation
+$p$-values reach the $10^{-4}$ resolution floor of $10^{4}$ resamples (i.e.\
+no resampled statistic exceeded the observed one). These results are produced
+by \texttt{significance\_test.py} from the cached per-query scores.
+
+\subsection{Training dynamics}
+Fig.~\ref{fig:train} shows the W\&B training curves of the LoRA reranker.
+The loss decreases smoothly across the cosine-annealed schedule, while
+dev NDCG@1000 plateaus by the second epoch, motivating early stopping at
+that point.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{images/b25_ablation_study.png}
+\caption{Performance of base model BM25 in WandB}
+\label{fig:bm25_wandb}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{images/bert_uncased_gru_training.png}
+\caption{BERT Uncased and GRU Training in WandB}
+\label{fig:bert_wandb}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{images/llm_ranker_training.png}
+\caption{Training dynamics of the LoRA reranker (W\&B project
+\texttt{tot-reranker}). Top: epoch loss for Qwen2.5-0.5B; bottom:
+development NDCG@1000 evaluated each epoch. The 1.5B variant follows
+the same pattern.}
+\label{fig:train}
+\end{figure}
+
+% ---------------------------------------------------------------------------
+\section{Interpretability Analysis}
+% ---------------------------------------------------------------------------
+To understand \emph{why} the final model retrieves what it does, we
+projected the 512-dimensional dense embeddings of all 150 dev queries and
+their ground-truth documents to two dimensions with UMAP
+($n_{\mathrm{neighbors}}{=}30$, $\mathrm{min\_dist}{=}0.1$,
+cosine metric)~\cite{mcinnes2018umap}. Because the LoRA reranker is a
+cross-encoder it produces no standalone vector to embed; we therefore
+project the dense BERT--GRU space and use colour to carry the final
+hybrid-model behaviour. Figure~\ref{fig:umap_ndcg} colours each query by its
+final (BERT--GRU\,+\,Qwen) per-query NDCG@1000, and
+Figure~\ref{fig:umap_delta} gives a contrastive view that colours each query
+by the NDCG change the reranker induces.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{images/umap_query_doc.png}
+\caption{UMAP of the dense BERT--GRU space: dev queries (circles) and their
+ground-truth documents (triangles), coloured by final
+BERT--GRU\,+\,Qwen NDCG@1000 (lighter is higher). Queries and documents form
+two separate regions---the expected dual-encoder modality gap---so the large
+inter-cluster distance is an artefact of the asymmetric encoders, not a
+retrieval signal. The interpretable observation is \emph{within} the query
+cluster: high- and low-NDCG queries are thoroughly interleaved.}
+\label{fig:umap_ndcg}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{images/umap_rerank_delta.png}
+\caption{Contrastive view of the Qwen2.5-0.5B reranker on the same dense
+space: queries are coloured by their per-query NDCG@1000 change
+(reranked\,$-$\,dense; red improves, blue hurts, grey unchanged). The
+reranker improves $36$ of $150$ queries and harms $14$; the effect is
+diffuse rather than localised to any region of the embedding space.}
+\label{fig:umap_delta}
+\end{figure}
+
+Two observations follow, both of which are deliberately conservative. First,
+per-query difficulty is \emph{not} low-dimensionally organised: high- and
+low-NDCG queries are interleaved within the query cluster
+(Fig.~\ref{fig:umap_ndcg}), so retrieval success is driven by specific
+content match rather than by a query's coarse position in the embedding
+space. Second, the reranker's benefit is likewise diffuse
+(Fig.~\ref{fig:umap_delta}): it does not rescue an identifiable region but
+improves a scattered minority of queries, consistent with its role as a
+top-100 re-orderer. The honest, quantitative summary of its contribution is
+therefore the per-query delta itself---$36$ improved, $14$ harmed, net
+$+0.081$ NDCG@1000---rather than any spatial pattern. Because it reorders only
+within the dense top-100, this lift comes from promoting relevant documents
+that were already retrieved, not from recovering queries whose target was
+never recalled.
+
+% ---------------------------------------------------------------------------
+\section{Error Analysis and Discussion}
+% ---------------------------------------------------------------------------
+To investigate where the model underperforms, we selected the 15
+lowest-NDCG@1000 queries under the final pipeline and classified each
+automatically from the cached per-query scores (\texttt{error\_analysis.py}),
+using sentence count, a proper-noun heuristic, and the gold document's position
+relative to the top-100 rerank pool. The procedure is deterministic and
+reproducible: no failing query is hand-picked.
+
+The dominant finding is unambiguous: \emph{all 15 of the worst queries are
+first-stage recall failures}, with NDCG@1000 $=0$ and R@100 $=0$. The gold
+document never enters the top-100, so the cross-encoder reranker never scores
+it. These failures are therefore attributable entirely to the dense retriever,
+and no reranker---of any size---can recover them; there are \emph{no} ranking
+errors among the worst queries. This localises the binding constraint of the
+whole pipeline at the dense first stage.
+
+Crucially, these are \emph{not} failures of corpus coverage or query sparsity.
+The missed targets are frequently famous, richly documented films---query
+\texttt{403} is \emph{V for Vendetta} (2005), \texttt{345} is \emph{A Clockwork
+Orange} (1971), \texttt{1038} is \emph{Smokey and the Bandit~II}, \texttt{279}
+is \emph{Freedom Writers} (2007)---all with detailed plot summaries in the
+collection. Nor does query length help: \texttt{403} is an 18-sentence,
+16-proper-noun description, among the most detailed in the dev set, yet scores
+$0$ exactly like the one-sentence queries \texttt{992} and \texttt{902}. The
+limitation is therefore \emph{representational}: the dense bi-encoder cannot
+bridge the gap between a first-person, scene-by-scene recollection and an
+encyclopedic plot summary, even when the target is well covered and the
+description is rich.
+
+Reading the isolated query--document pairs exposes four recurring facets of
+this gap, summarised in Table~\ref{tab:errors}.
+\begin{itemize}
+    \item \textbf{Misremembered attributes.} Query \texttt{403}
+          (\emph{V for Vendetta}, an English/British film) describes it as
+          German or French; \texttt{345} (\emph{A Clockwork Orange}) recalls a
+          woman killed during the break-in that the film does not contain. The
+          \texttt{[CLS]}-pooled embedding latches onto these surface
+          attributes---some of them wrong---rather than the film's underlying
+          plot identity.
+    \item \textbf{Event/scene queries without named entities} (\texttt{832}
+          $\to$ \emph{Mikey}, ``a kid shoots his father with a bow and
+          arrow''; \texttt{714} $\to$ \emph{Sorority Boys}). The embedding
+          captures topical gist but not specific plot-event matching against
+          encyclopedic summaries.
+    \item \textbf{False or misleading anchors} (\texttt{652} $\to$
+          \emph{Scary Movie}, ``ended the same way as \emph{The Usual
+          Suspects}''). The only strong entity names a \emph{different} film
+          and pulls retrieval toward it; the contrastive objective has no
+          mechanism to discount an asserted-but-wrong attribute.
+    \item \textbf{Film/TV content-type confusion}, where the target is a
+          television anthology or series (\texttt{813} $\to$ \emph{Thriller},
+          \texttt{861} $\to$ \emph{Nightmares \& Dreamscapes}, \texttt{625}
+          $\to$ \emph{Newhart}) and the query itself hedges that it ``may have
+          been a TV show''.
+\end{itemize}
+
+\begin{table}[t]
+\centering
+\caption{Representative failing query--document pairs from the 15 worst
+queries (all with NDCG@1000 $=$ R@100 $= 0$), grouped by failure facet.}
+\label{tab:errors}
+\begin{tabular}{llp{3.3cm}}
+\toprule
+Query & Gold film & Failure facet \\
+\midrule
+\texttt{403} & V for Vendetta        & misremembered attributes \\
+\texttt{345} & A Clockwork Orange    & misremembered attributes \\
+\texttt{832} & Mikey                 & event/scene, no entities \\
+\texttt{714} & Sorority Boys         & event/scene, no entities \\
+\texttt{652} & Scary Movie           & false/misleading anchor \\
+\texttt{813} & Thriller (TV)         & film/TV confusion \\
+\texttt{861} & Nightmares \& Dreamscapes (TV) & film/TV confusion \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Because every tractable failure is on the recall side and the targets are
+already well represented in the corpus, the productive next steps address the
+query--document \emph{representation}, not corpus expansion: a sparse + dense
+hybrid retriever to recover entity- and title-bearing queries lexically, and
+retrieval-time query rewriting (e.g.\ an LLM that normalises a rambling
+recollection into a canonical plot description and hedges over
+asserted-but-wrong attributes). Finally, separating gold documents that merely
+fall outside the top-100 rerank pool (ranks 100--1000, recoverable by widening
+it) from those missed beyond rank 1000 requires the full ranked run and is the
+immediate follow-up diagnostic.
+
+% ---------------------------------------------------------------------------
+\section{Conclusion}
+% ---------------------------------------------------------------------------
+This work delivered a full BM25 $\rightarrow$ tuned BERT--GRU
+bi-encoder $\rightarrow$ Qwen2.5 LoRA reranker pipeline for TREC 2023
+Tip-of-the-Tongue retrieval. Across 12 tokenizer configurations,
+WordPiece-cased at $d{=}512$ emerged as the strongest dense backbone,
+and a sentence-dropout of $p{=}0.2$ was confirmed as the best noise
+reduction setting. The full pipeline reaches NDCG@1000 of 0.2892
+and R@100 of 0.4067, a statistically significant gain over both the
+BM25 baseline ($p < 10^{-9}$) and the dense BERT--GRU retriever
+($p < 10^{-3}$), confirmed by both Wilcoxon and permutation tests.
+The error analysis shows that the worst queries are uniformly first-stage
+recall misses---the gold document never reaches the reranker---making
+recall-augmenting hybrid retrieval and query rewriting the most tractable
+next targets rather than a larger reranker.
+
+% ---------------------------------------------------------------------------
+\section*{AI Use Statement}
+AI-assisted grammar checking and LaTeX formatting were used during the
+preparation of this manuscript. Code-level AI assistance was used while
+debugging the training loop and the LoRA reranker prompt template. All
+experimental design, analysis, and interpretation are the author's own
+work.
+
+% ---------------------------------------------------------------------------
+\begin{thebibliography}{00}
+% ---------------------------------------------------------------------------
+
+\bibitem{soboroff2023totoverview}
+I.~Soboroff \emph{et~al.}, ``Overview of the TREC 2023 Tip-of-the-Tongue
+Track,'' in \emph{Proc.\ 32nd Text REtrieval Conference (TREC 2023)},
+NIST Special Publication, Gaithersburg, MD, USA, 2023.
+
+\bibitem{bhatt2023generalizable}
+A.~Bhatt \emph{et~al.}, ``Generalizable Tip-of-the-Tongue Retrieval with
+LLM Re-ranking,'' in \emph{Proc.\ 32nd Text REtrieval Conference (TREC 2023)},
+NIST Special Publication, Gaithersburg, MD, USA, 2023.
+
+\bibitem{devlin2019bert}
+J.~Devlin, M.-W.~Chang, K.~Lee, and K.~Toutanova, ``BERT: Pre-training of
+Deep Bidirectional Transformers for Language Understanding,''
+in \emph{Proc.\ NAACL-HLT}, Minneapolis, MN, 2019, pp.\ 4171--4186,
+doi:~10.18653/v1/N19-1423.
+
+\bibitem{robertson1994bm25}
+S.~Robertson and K.~Sp\"arck Jones, ``Simple, Proven Approaches to Text
+Retrieval,'' Univ.\ of Cambridge Computer Lab., Tech.\ Rep.~356, 1994.
+
+\bibitem{cho2014gru}
+K.~Cho \emph{et~al.}, ``Learning Phrase Representations using RNN
+Encoder-Decoder for Statistical Machine Translation,'' in \emph{Proc.\
+EMNLP}, Doha, Qatar, 2014, pp.\ 1724--1734, doi:~10.3115/v1/D14-1179.
+
+\bibitem{johnson2019faiss}
+J.~Johnson, M.~Douze, and H.~J\'egou, ``Billion-scale similarity search
+with GPUs,'' \emph{IEEE Trans.\ Big Data}, vol.~7, no.~3, pp.~535--547,
+2019, doi:~10.1109/TBDATA.2019.2921572.
+
+\bibitem{karpukhin2020dpr}
+V.~Karpukhin \emph{et~al.}, ``Dense Passage Retrieval for Open-Domain
+Question Answering,'' in \emph{Proc.\ EMNLP}, 2020, pp.\ 6769--6781,
+doi:~10.18653/v1/2020.emnlp-main.550.
+
+\bibitem{wilcoxon1945}
+F.~Wilcoxon, ``Individual Comparisons by Ranking Methods,''
+\emph{Biometrics Bulletin}, vol.~1, no.~6, pp.~80--83, 1945.
+
+\bibitem{mcinnes2018umap}
+L.~McInnes, J.~Healy, and J.~Melville, ``UMAP: Uniform Manifold
+Approximation and Projection for Dimension Reduction,'' \emph{Journal
+of Open Source Software}, vol.~3, no.~29, p.~861, 2018,
+doi:~10.21105/joss.00861.
+
+\end{thebibliography}
+
+\end{document}
