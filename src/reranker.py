@@ -13,6 +13,7 @@ from peft import LoraConfig, get_peft_model, TaskType, PeftModel
 from tqdm import tqdm
 
 from dataset import load_jsonl, load_qrels
+from seed_utils import set_seed
 
 try:
     import wandb
@@ -610,6 +611,8 @@ def evaluate_pipeline(reranker, bi_encoder_results, queries, docs, qrels,
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
+    set_seed(42)
+
     # 0. DDP setup — when launched via torchrun, each process gets its own
     # LOCAL_RANK and trains on a different GPU. Single-GPU runs skip this.
     if is_ddp():

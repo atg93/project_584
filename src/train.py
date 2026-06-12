@@ -14,6 +14,7 @@ from tqdm import tqdm
 from tot_retrieval import QueryEncoder, DocEncoder, contrastive_loss
 from dataset import get_trec_dataloader, get_reddit_dataloader, get_doc_dataloader, load_qrels
 from evaluate import evaluate, print_results
+from seed_utils import set_seed
 
 try:
     import wandb
@@ -312,6 +313,9 @@ def parse_args():
     p.add_argument('--checkpoint-dir',     default='checkpoints')
     p.add_argument('--resume',             default=None)
 
+    # reproducibility
+    p.add_argument('--seed',               type=int,   default=42)
+
     # wandb
     p.add_argument('--wandb-project',      default=None,
                    help='WandB project name (omit to disable WandB)')
@@ -327,4 +331,5 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    set_seed(args.seed)
     train(args)

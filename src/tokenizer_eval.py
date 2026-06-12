@@ -32,6 +32,7 @@ except ImportError:
 from dataset import load_jsonl, load_qrels
 from evaluate import ndcg_at_k, recall_at_k, build_index
 from tot_retrieval import contrastive_loss
+from seed_utils import set_seed
 
 
 # ---------------------------------------------------------------------------
@@ -689,7 +690,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--eval-only', action='store_true',
                         help='Skip training — evaluate saved checkpoints only')
+    parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()
+
+    set_seed(args.seed)
 
     data_cfg = {
         'train_query_path': 'data/trec/train_queries.jsonl',

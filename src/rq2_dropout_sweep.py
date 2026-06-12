@@ -15,6 +15,7 @@ W&B: per-epoch trec_loss / reddit_loss + dev NDCG@1000 / R@100 logged every --ev
 
 import os
 import json
+import random
 import torch
 import torch.nn as nn
 import numpy as np
@@ -711,7 +712,15 @@ if __name__ == '__main__':
     parser.add_argument('--reddit-query-path', type=str, default='data/reddit/queries.jsonl')
     parser.add_argument('--gpus', type=str, default=None,
                         help='Comma-separated GPU indices with no spaces, e.g. --gpus 0,1')
+    parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()
+
+    # seed all RNGs inline (this script stays free of local project imports)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    os.environ['PYTHONHASHSEED'] = str(args.seed)
 
     # parse --gpus "0,1" → [0, 1]
     gpu_ids = [int(g.strip()) for g in args.gpus.split(',')] if args.gpus else []
